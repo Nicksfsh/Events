@@ -212,6 +212,7 @@ button:hover {
 }
 
 .participant-card {
+    overflow-x: scroll;
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -322,4 +323,31 @@ button:hover {
     width: 100%;
     justify-content: space-evenly;
     margin-bottom: 15px;
+}
+
+.participants-statistics {
+    overflow-x: scroll;
+    width: 95%;
+    height: 150px;
+    background: #eee;
+    display: flex;
+    margin: 0 auto 15px;
+
+}
+
+.participants-statistics div{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+
+
+.participants-statistics .item {
+    height: 100%;
+    width: 30px;
+    background: #1486ff;
+    margin: .5em;
+    color: black;
+
 }

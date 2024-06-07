@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const participantSearchButton = document.getElementById('participant-search-button');
     const participantSearchError = document.getElementById('participant-search-error');
     const participantsGrid = document.getElementById('participants-grid');
+    const participantsStatistics = document.getElementById('participants-statistics');
     const prevPageButton = document.getElementById('prev-page');
     const nextPageButton = document.getElementById('next-page');
     const firstPageButton = document.getElementById('first-page');
@@ -39,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadLocations();
-
 
     clearFiltersButton.addEventListener('click', () => {
 
@@ -223,13 +223,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (jsonError) {
                     data.message = await response.text();
                 }
+                if (response.ok && data.existing === true) {
 
+                    registerError.textContent = 'Цей учасник вже зареєстрований на цей захід';
+                    return
+                }
                 if (response.ok) {
                     registerModal.style.display = 'none';
                     registerForm.reset();
                 } else {
 
-                    if (response.status === 400) {
+                    if (response.existing === true) {
                         registerError.textContent = data.message || 'Цей учасник вже зареєстрований на цей захід';
                     } else {
                         registerError.textContent = 'Помилка при реєстрації. Будь ласка, спробуйте ще раз.';
@@ -258,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     viewModal.addEventListener('show', async (event) => {
         const eventId = document.getElementById('participant-event-id').value;
+
         loadParticipants(eventId);
     });
 
@@ -279,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 participantsGrid.innerHTML = '';
             } else {
                 participantSearchError.textContent = query.length < 3 ? 'Треба ввести щонайменше три символи' : '';
+                renderStatistics(data.participants)
                 renderParticipants(data.participants);
             }
         } catch (error) {
@@ -286,6 +292,63 @@ document.addEventListener('DOMContentLoaded', () => {
             participantSearchError.textContent = 'Помилка при завантаженні учасників';
         }
     };
+
+
+    const renderStatistics = (participants) => {
+
+        const numberPerDate = [];
+
+        participants.forEach(item => {
+            const existingEntry = numberPerDate.find(entry =>
+                entry.regDate.slice(0, 10) === item.regDate.slice(0, 10)
+            );
+
+            if (existingEntry) {
+                existingEntry.numberOfParticipants++;
+            } else {
+                numberPerDate.push({
+                    regDate: item.regDate,
+                    numberOfParticipants: 1,
+                    percent: 0
+                });
+            }
+        });
+
+        const maxParticipants = Math.max(...numberPerDate.map(entry => entry.numberOfParticipants));
+
+        numberPerDate.forEach(entry => {
+            entry.percent = Math.round((entry.numberOfParticipants / maxParticipants) * 100);
+        });
+
+        participantsStatistics.innerHTML = '';
+        numberPerDate.forEach(date => {
+
+            const participantPerDayBar = document.createElement('div');
+
+            const bar = document.createElement('div');
+            bar.classList.add('item');
+            bar.style.height = date.percent + '%';
+            bar.textContent = date.numberOfParticipants;
+            const item = document.createElement('div');
+            item.classList.add('item');
+
+            const timestamp = new Date(date.regDate);
+            const month = timestamp.getUTCMonth() + 1;
+            const day = timestamp.getUTCDate();
+
+            const registrationDate = `${day}.${month.toString().padStart(2, '0')}`;
+
+            const dateElement = document.createElement('div');
+            dateElement.classList.add('item-date');
+            dateElement.textContent = registrationDate;
+
+            participantPerDayBar.appendChild(bar);
+            participantPerDayBar.appendChild(dateElement);
+
+            participantsStatistics.appendChild(participantPerDayBar);
+        });
+    };
+
 
     const renderParticipants = (participants) => {
         participantsGrid.innerHTML = '';

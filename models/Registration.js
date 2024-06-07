@@ -6,6 +6,7 @@ const registrationSchema = new mongoose.Schema({
     email: String,
     dateOfBirth: Date,
     startDate: Date,
+    regDate: Date,
     source: String
 });
 
